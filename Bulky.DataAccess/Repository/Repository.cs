@@ -31,9 +31,19 @@ namespace Bulky.DataAccess.Repository
             dbSet.Add(entity);
         }
 
-        public T Get(Expression<Func<T, bool>> filter, string? includeProperties = null)
+        public T Get(Expression<Func<T, bool>> filter, string? includeProperties = null, bool tracked = false)
         {
             IQueryable<T> query = dbSet;
+            if (tracked)
+            {
+                query = dbSet;
+                
+            }
+            else{
+                query = dbSet.AsNoTracking();
+                
+            }
+            query = query.Where(filter);
             if (!string.IsNullOrEmpty(includeProperties))
             {
                 // we will receive the Category, CoverType as comma separated values, thus we will have to split them
@@ -43,15 +53,18 @@ namespace Bulky.DataAccess.Repository
                     query = query.Include(includeProp);
                 }
             }
-            query = query.Where(filter);
+           
             return query.FirstOrDefault();
-
         }
 
         // Thus if someone gives us Category or CoverType we can build the include properties
-        public IEnumerable<T> GetAll(string? includeProperties = null)
+        public IEnumerable<T> GetAll(Expression<Func<T, bool>>? filter, string? includeProperties = null)
         {
             IQueryable<T> query = dbSet;
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
             if(!string.IsNullOrEmpty(includeProperties))
             {
                 // we will receive the Category, CoverType as comma separated values, thus we will have to split them
