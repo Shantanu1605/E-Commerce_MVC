@@ -5,6 +5,7 @@ using Bulky.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stripe;
+using Stripe.Checkout;
 using System.Diagnostics;
 using System.Security.Claims;
 
@@ -156,6 +157,93 @@ namespace BulkyWeb.Areas.Admin.Controllers
 
             return RedirectToAction(nameof(Details), new { orderId = OrderVM.OrderHeader.Id });
 
+        }
+
+        [ActionName("Details")]
+        [HttpPost]
+        public IActionResult Details_PAY_NOW()
+        {
+            OrderVM.OrderHeader = _unitOfWork.OrderHeader
+                .Get(u => u.Id == OrderVM.OrderHeader.Id, includeProperties: "ApplicationUser");
+
+            OrderVM.OrderDetail = _unitOfWork.OrderDetail
+                .GetAll(u => u.OrderHeaderId == OrderVM.OrderHeader.Id, includeProperties: "Product");
+
+            //Stripe Logic
+            var domain = "https://localhost:7049/";
+            var options = new SessionCreateOptions
+            {
+                SuccessUrl = domain + $"admin/order/PaymentConfirmation?orderHeaderId={OrderVM.OrderHeader.Id}",
+                CancelUrl = domain + $"admin/order/details?orderId={OrderVM.OrderHeader.Id}",
+                LineItems = new List<SessionLineItemOptions>(),
+                Mode = "payment",
+            };
+
+            foreach (var item in OrderVM.OrderDetail)
+            {
+                var sessionLineItem = new SessionLineItemOptions
+                {
+                    PriceData = new SessionLineItemPriceDataOptions
+                    {
+                        UnitAmount = (long)(item.Price * 100), // $20.50 => 2050
+                        Currency = "usd",
+                        ProductData = new SessionLineItemPriceDataProductDataOptions
+                        {
+                            Name = item.Product.Title
+                        }
+                    },
+                    Quantity = item.Count
+                };
+                options.LineItems.Add(sessionLineItem);
+            }
+
+            // creating a new session service
+            var service = new SessionService();
+            //when we create the session here we can expect the response back from the server here in the Session variable o fthe stripe
+            // This Session variable will have both the id as well as paymentintentID 
+            Session session = service.Create(options);
+
+            //now we will have to update back to our table before we redirect
+            _unitOfWork.OrderHeader.updateStripePaymentID(OrderVM.OrderHeader.Id, session.Id, session.PaymentIntentId);
+
+            //Note that at this moment the paymentIntentId would be null as it will only be updated when the payment is successfully completed
+
+            _unitOfWork.Save();
+
+            //now we will redirect to the Stripe website for payment
+            Response.Headers.Add("Location", session.Url);
+            return new StatusCodeResult(303);
+        }
+
+        public IActionResult PaymentConfirmation(int orderHeaderId)
+        {
+            // on coming to the this action, we will have to check whether the payment is done or not and for that we will have
+            // to retrieve the session from the stripe and check it's status first.
+
+            // first based on the id we will retrieve the complete order header
+            OrderHeader orderHeader = _unitOfWork.OrderHeader.Get(u => u.Id == orderHeaderId);
+
+            // now we will check that whether the payment status is delayed payment or not, if the payment is delayed payment then we will have to make sure that the payment actually went trhough with stripe payment right now
+            if (orderHeader.PaymentStatus == SD.PaymentStatusDelayedPayment)
+            {
+                //this is the order by Company
+                // thus we will have to retrieve the stripe session
+                var service = new SessionService();
+                Session session = service.Get(orderHeader.SessionId);
+
+                if (session.PaymentStatus.ToLower() == "paid")
+                {
+                    //that means the actual payment went through
+                    _unitOfWork.OrderHeader.updateStripePaymentID(orderHeaderId, session.Id, session.PaymentIntentId);
+
+                    // now we will not update the order status and we will update only the payment status kyuki order status purana hi rahega
+                    _unitOfWork.OrderHeader.updateStatus(orderHeaderId, orderHeader.OrderStatus, SD.PaymentStatusApproved);
+                    _unitOfWork.Save();
+                }
+            }
+
+           
+            return View(orderHeaderId);
         }
 
 

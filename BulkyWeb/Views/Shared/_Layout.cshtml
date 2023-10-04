@@ -1,4 +1,8 @@
-﻿<!DOCTYPE html>
+﻿@* in order to access our session in this view we need to add few things *@
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -31,8 +35,8 @@
                             <a class="nav-link "asp-area="Admin"  asp-controller="Order" asp-action="Index">Manage Order</a>
                         </li>
                         
-                       @*  @if (User.IsInRole(SD.Role_Admin))
-                        { *@
+                         @if (User.IsInRole(SD.Role_Admin))
+                        { 
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     Content Management
@@ -50,13 +54,40 @@
 
                                     <li><hr class="dropdown-divider"></li>
 
+                                    <li class="nav-item">
+                                        <a class="dropdown-item " asp-area="Identity" asp-page="/Account/Register" >Create User</a>
+                                    </li>
+
                                 </ul>
                             </li>
-                        @* } *@
+                        }
+
+                        @* using the HttpContextAccessor we can access the shopping cart session *@
+                        
+                        @*  @if (HttpContextAccessor.HttpContext.Session.GetInt32(SD.SessionCart) != null)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link " asp-area="Customer" asp-controller="Cart" asp-action="Index">
+                                    <i class="bi bi-cart"></i> &nbsp;
+                                    (@HttpContextAccessor.HttpContext.Session.GetInt32(SD.SessionCart))
+                                </a>
+                            </li>
+                        } *@
+                       @*  else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link " asp-area="Customer" asp-controller="Cart" asp-action="Index">
+                                    <i class="bi bi-cart"></i> &nbsp;
+                                    (0 ))
+                                </a>
+                            </li>
+                            
+                        } *@
+                         @* now we do not need the above commented code as now we have replaced it with the view component *@
                         <li class="nav-item">
                             <a class="nav-link " asp-area="Customer" asp-controller="Cart" asp-action="Index">
-                                <i class="bi bi-cart"></i> &nbsp;
-
+                               @* with this the view component will automatically be injected *@
+                                @await Component.InvokeAsync("ShoppingCart")
                             </a>
                         </li>
                     </ul>

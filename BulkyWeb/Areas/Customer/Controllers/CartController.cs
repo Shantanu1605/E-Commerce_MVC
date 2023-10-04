@@ -229,6 +229,9 @@ namespace BulkyWeb.Areas.Customer.Controllers
                     _unitOfWork.OrderHeader.updateStatus(id, SD.StatusApproved, SD.PaymentStatusApproved);
                     _unitOfWork.Save();
                 }
+
+                //After the order is placed successfully we will have to clear the session , nhi to order place hone ke baad bhi cart wale icon mein count of products display hoga kyuki vo session mein pada hua hai
+                HttpContext.Session.Clear();
             }
 
             // now after the completion of payment we will have to remove the items from shopping cart and make them empty
@@ -252,9 +255,13 @@ namespace BulkyWeb.Areas.Customer.Controllers
 
         public IActionResult Minus(int cartId)
         {
-            var cartFromDb = _unitOfWork.ShoppingCart.Get(u => u.Id == cartId);
+            var cartFromDb = _unitOfWork.ShoppingCart.Get(u => u.Id == cartId,tracked:true);
             if (cartFromDb.Count <= 1)
             {
+                //agar cart se minus kiya kuch to vo session mein se bhi ek count kam hona chahiye tabhi vo display hoga updated wala
+                HttpContext.Session.SetInt32(SD.SessionCart, _unitOfWork.ShoppingCart
+               .GetAll(u => u.ApplicationUserId == cartFromDb.ApplicationUserId).Count() - 1);
+
                 //Remove the item from the cart
                 _unitOfWork.ShoppingCart.Remove(cartFromDb);
             }
@@ -270,7 +277,12 @@ namespace BulkyWeb.Areas.Customer.Controllers
 
         public IActionResult Remove(int cartId)
         {
-            var cartFromDb = _unitOfWork.ShoppingCart.Get(u => u.Id == cartId);
+            var cartFromDb = _unitOfWork.ShoppingCart.Get(u => u.Id == cartId,tracked:true);
+           
+            //agar cart se remove kiya kuch to vo session mein se bhi ek count kam hona chahiye tabhi vo display hoga updated wala
+            HttpContext.Session.SetInt32(SD.SessionCart, _unitOfWork.ShoppingCart
+                .GetAll(u => u.ApplicationUserId == cartFromDb.ApplicationUserId).Count() - 1);
+            
             _unitOfWork.ShoppingCart.Remove(cartFromDb);
 
             _unitOfWork.Save();

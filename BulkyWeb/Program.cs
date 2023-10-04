@@ -29,6 +29,22 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = $"/Identity/Account/AccessDenied";
 });
 
+//adding the service for facebook authentication
+builder.Services.AddAuthentication().AddFacebook(option =>
+{
+    option.AppId = "365774199110807";
+    option.AppSecret = "1811ab7f637c142b0cbd28f2e2570cd7";
+});
+
+//Configuring our application to add sessions-- adding session to the services
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(100);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
 // adding the dependency injection
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -56,6 +72,9 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+//we will also have to add the session to the request pipeline
+app.UseSession();
 
 app.MapRazorPages();
 

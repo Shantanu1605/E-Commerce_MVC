@@ -26,6 +26,11 @@ namespace BulkyWeb.Areas.Identity.Pages.Account
         public async Task<IActionResult> OnPost(string returnUrl = null)
         {
             await _signInManager.SignOutAsync();
+            
+            // after logut we will have to clear the session 
+            //now this clearing of session is also done in the shopping cart view controller
+            //HttpContext.Session.Clear();
+
             _logger.LogInformation("User logged out.");
             if (returnUrl != null)
             {

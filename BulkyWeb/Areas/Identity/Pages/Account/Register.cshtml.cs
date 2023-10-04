@@ -218,7 +218,18 @@ namespace BulkyWeb.Areas.Identity.Pages.Account
                     }
                     else
                     {
-                        await _signInManager.SignInAsync(user, isPersistent: false);
+                        // if admin is creating an account for someone then in that case we do not want to sign in with the new account created. As admin is already signed in
+                        if (User.IsInRole(SD.Role_Admin)) {
+
+                            //if admin user hai to bas ek notification display karenge
+                            TempData["success"] = "New User Created Successfully";
+                        }
+                        else
+                        {
+                            // if admin user nhi hai tab hi new registerd wale user ko sign in karenge
+                            await _signInManager.SignInAsync(user, isPersistent: false);
+                        }
+                      
                         return LocalRedirect(returnUrl);
                     }
                 }
