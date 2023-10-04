@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Bulky.Utility;
 using Stripe;
+using Bulky.DataAccess.DbInitializer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,6 +46,9 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
+//adding the dependency for the IDbinitializer
+builder.Services.AddScoped<IDbInitializer, DbInitializer>();
+
 // adding the dependency injection
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -76,6 +80,9 @@ app.UseAuthorization();
 //we will also have to add the session to the request pipeline
 app.UseSession();
 
+// injecting the seedDatabase method to our pipeline, This will invoke the method everytime the application is restarted 
+SeedDatabse();
+
 app.MapRazorPages();
 
 app.MapControllerRoute(
@@ -83,3 +90,14 @@ app.MapControllerRoute(
     pattern: ("{area=Customer}/{controller=Home}/{action=Index}/{id?}"));
 
 app.Run();
+
+
+// doing the configuration for seeding our database using the initialize method of our DbInitializer
+void SeedDatabse()
+{
+    using(var scope = app.Services.CreateScope())
+    {
+        var dbInitializer = scope.ServiceProvider.GetRequiredService<IDbInitializer>();
+        dbInitializer.Initialize();
+    }
+}

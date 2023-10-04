@@ -12,7 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Bulky.DataAccess.Repository.IRepository;
 using Bulky.Model;
-using Bulky.Utility; 
+using Bulky.Utility;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -46,7 +46,7 @@ namespace BulkyWeb.Areas.Identity.Pages.Account
             IEmailSender emailSender,
             IUnitOfWork unitOfWork)
         {
-            _unitOfWork= unitOfWork;
+            _unitOfWork = unitOfWork;
             _roleManager = roleManager;
             _userManager = userManager;
             _userStore = userStore;
@@ -131,14 +131,15 @@ namespace BulkyWeb.Areas.Identity.Pages.Account
 
         public async Task OnGetAsync(string returnUrl = null)
         {
-            if (!_roleManager.RoleExistsAsync(SD.Role_Customer).GetAwaiter().GetResult())
-               
-            {
-                _roleManager.CreateAsync(new IdentityRole(SD.Role_Customer)).GetAwaiter().GetResult();
-                _roleManager.CreateAsync(new IdentityRole(SD.Role_Employee)).GetAwaiter().GetResult();
-                _roleManager.CreateAsync(new IdentityRole(SD.Role_Admin)).GetAwaiter().GetResult();
-                _roleManager.CreateAsync(new IdentityRole(SD.Role_Company)).GetAwaiter().GetResult();
-            }
+            // Now we will do this role wala task in ou DbInitializer ka Initialize() method
+            //if (!_roleManager.RoleExistsAsync(SD.Role_Customer).GetAwaiter().GetResult())
+
+            //{
+            //    _roleManager.CreateAsync(new IdentityRole(SD.Role_Customer)).GetAwaiter().GetResult();
+            //    _roleManager.CreateAsync(new IdentityRole(SD.Role_Employee)).GetAwaiter().GetResult();
+            //    _roleManager.CreateAsync(new IdentityRole(SD.Role_Admin)).GetAwaiter().GetResult();
+            //    _roleManager.CreateAsync(new IdentityRole(SD.Role_Company)).GetAwaiter().GetResult();
+            //}
 
             // populating the role list
             Input = new()
@@ -178,7 +179,7 @@ namespace BulkyWeb.Areas.Identity.Pages.Account
                 user.PhoneNumber = Input.PhoneNumber;
 
                 // Before creating the user we will check that if the role selected is Company role then the user ka companyId = Input.CompanyId
-                
+
                 if (Input.Role == SD.Role_Company)
                 {
                     user.CompanyId = Input.CompanyId;
@@ -204,7 +205,7 @@ namespace BulkyWeb.Areas.Identity.Pages.Account
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
                     var callbackUrl = Url.Page(
-                        "/Account/ConfirmEmail", 
+                        "/Account/ConfirmEmail",
                         pageHandler: null,
                         values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
                         protocol: Request.Scheme);
@@ -219,7 +220,8 @@ namespace BulkyWeb.Areas.Identity.Pages.Account
                     else
                     {
                         // if admin is creating an account for someone then in that case we do not want to sign in with the new account created. As admin is already signed in
-                        if (User.IsInRole(SD.Role_Admin)) {
+                        if (User.IsInRole(SD.Role_Admin))
+                        {
 
                             //if admin user hai to bas ek notification display karenge
                             TempData["success"] = "New User Created Successfully";
@@ -229,7 +231,7 @@ namespace BulkyWeb.Areas.Identity.Pages.Account
                             // if admin user nhi hai tab hi new registerd wale user ko sign in karenge
                             await _signInManager.SignInAsync(user, isPersistent: false);
                         }
-                      
+
                         return LocalRedirect(returnUrl);
                     }
                 }
