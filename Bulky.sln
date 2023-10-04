@@ -5,8 +5,6 @@ VisualStudioVersion = 17.8.34004.107
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BulkyWeb", "BulkyWeb\BulkyWeb.csproj", "{894EF037-A440-472A-A0C2-1BB7A65DDB34}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Razor_implementation", "F:\Razor_Implementation\WebApplication1\Razor_implementation.csproj", "{36E3648C-46A2-47FB-8259-997AA1D7047A}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bulky.DataAccess", "Bulky.DataAccess\Bulky.DataAccess.csproj", "{878BE932-09C3-4845-B531-8E34879AEDB0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bulky.Model", "Bulky.Model\Bulky.Model.csproj", "{5DA14259-ED90-4A7A-BCA3-2F5D9D6783D4}"
