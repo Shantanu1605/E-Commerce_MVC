@@ -152,7 +152,7 @@ namespace BulkyWeb.Areas.Customer.Controllers
                 //it is a regular customer account and we need to capture payment
                 // thus we will have to write the stripe payment logic here
 
-                var domain = "https://localhost:7049/";
+                var domain = Request.Scheme+ "://"+ Request.Host.Value+ "/";
                 var options = new SessionCreateOptions
                 {
                     SuccessUrl = domain+ $"customer/cart/OrderConfirmation?id={ShoppingCartVM.OrderHeader.Id}",
